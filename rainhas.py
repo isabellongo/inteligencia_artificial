@@ -11,6 +11,7 @@ import random
 
 # Essa funcao calcula quantos ataques existem no tabuleiro, como as rainhas estao sempre na mesma coluna,
 # ele verifica se elas estao na mesma linha ou na mesma diagonal.
+# teste
 def CalcularAtaques(estado):
     ataques = 0
     for i in range(len(estado)):
