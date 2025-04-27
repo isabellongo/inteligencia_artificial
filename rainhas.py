@@ -1,18 +1,9 @@
-
-
-# Primeiro, definir como elas serao representadas 
-# Gerar aleatoriamente a posicao inicial
-# Calcular os ataques
-# Iterativamente, de rainha em rainha, gera uma vizinhanca, 
-# e assim que encontrar um valor menor de ataques, ela muda o estado
-# se nao encontrar um valor menor de ataques, para o algoritmo (ou em ataques = 0)
-
 import random
 import pygame
 
-# Essa funcao calcula quantos ataques existem no tabuleiro, como as rainhas estao sempre na mesma coluna,
+# Essa função calcula quantos ataques existem no tabuleiro, como as rainhas estão sempre na mesma coluna,
 # ele verifica se elas estao na mesma linha ou na mesma diagonal.
-# teste
+
 def CalcularAtaques(estado):
     ataques = 0
     for i in range(len(estado)):
@@ -21,6 +12,10 @@ def CalcularAtaques(estado):
                 ataques = ataques + 1
     return ataques
 
+# Verifica, uma coluna por vez, se há uma posição melhor para cada rainha, para na primeira posição que resulte em menos
+# ataques, ou passa para a próxima coluna caso nenhuma seja encontrada, uma vez que todas as colunas sejam visitadas, retorna 
+# o novo estado. 
+
 def TestarVizinhos(estado): 
     ataques = CalcularAtaques(estado)
     estadoNovo = estado.copy()
@@ -28,110 +23,95 @@ def TestarVizinhos(estado):
         for j in range(len(estado)):
             estadoNovo[i] = j
             if CalcularAtaques(estadoNovo) < ataques:
-                print("Um novo melhor estado foi encontrado!\n")
-                print (estadoNovo)
                 return estadoNovo
             estadoNovo[i]=estado[i]
-    print("Erro: esse já é o melhor local")
-    print(estado)
     return estado
+
+# Itera a função TestarVizinhos até que não seja possível encontrar um estado vizinho com um número menor de ataques,
+# adiciona o estado recebido em cada iteração a uma lista, de ordem decrescente de número de ataques 
 
 def CalcularMelhorEstado(estado): 
     estadoVizinho = TestarVizinhos(estado)
     listaEstados = list()
     listaEstados.append(estado)
     listaEstados.append(estadoVizinho)
-    print("original: " + str(CalcularAtaques(estado)))
-    print("novo: "+ str(CalcularAtaques(estadoVizinho)))
     while(CalcularAtaques(estado) > CalcularAtaques(estadoVizinho)):
-        print("original: " + str(CalcularAtaques(estado)))
-        print("novo: "+ str(CalcularAtaques(estadoVizinho)))
         estado = estadoVizinho.copy()
         estadoVizinho = TestarVizinhos(estado)
         if(estado != estadoVizinho):
             listaEstados.append(estadoVizinho)
     return listaEstados
 
+# Recebe a lista devolvida pela função CalcularMelhorEstado e faz uma animação representando a posição das rainhas em 
+# cada estado, assim como o número da iteração e o número de ataques
 
-
-
-def animar_tabuleiro(estados, listaAtaques):
+def AnimarTabuleiro(estados, listaAtaques):
     N = 8
-    TILE_SIZE = 80
-    BOARD_SIZE = N * TILE_SIZE
-    SCREEN_HEIGHT = BOARD_SIZE + 40  # board + counter
+    TAMANHO_QUADRADO = 80
+    TAMANHO_TABULEIRO = N * TAMANHO_QUADRADO
+    ALTURA_TELA = TAMANHO_TABULEIRO + 40  # board + counter
 
     WHITE = (255, 255, 255)
     GRAY = (150, 150, 150)
     BLACK = (0, 0, 0)
 
     pygame.init()
-    screen = pygame.display.set_mode((BOARD_SIZE, SCREEN_HEIGHT))
+    tela = pygame.display.set_mode((TAMANHO_TABULEIRO, ALTURA_TELA))
     pygame.display.set_caption('Problema das 8 rainhas - Hill Climbing')
 
-    font = pygame.font.SysFont("Segoe UI Symbol", 64)
-    counter_font = pygame.font.SysFont("Arial", 24)
+    fonte = pygame.font.SysFont("Segoe UI Symbol", 64)
+    fonte_contador = pygame.font.SysFont("Arial", 24)
 
     frame = 0
     clock = pygame.time.Clock()
 
-    running = True
-    while running:
-        screen.fill(WHITE)
+    rodando = True
+    while rodando:
+        tela.fill(WHITE)
 
-        # Draw chessboard 
-        for row in range(N):
-            for col in range(N):
-                rect = pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                if (row + col) % 2 == 0:
-                    pygame.draw.rect(screen, GRAY, rect)
+        for linha in range(N):
+            for coluna in range(N):
+                rect = pygame.Rect(coluna * TAMANHO_QUADRADO, linha * TAMANHO_QUADRADO, TAMANHO_QUADRADO, TAMANHO_QUADRADO)
+                if (linha + coluna) % 2 == 0:
+                    pygame.draw.rect(tela, GRAY, rect)
                 else:
-                    pygame.draw.rect(screen, WHITE, rect)
+                    pygame.draw.rect(tela, WHITE, rect)
 
-        # Draw queens 
         estado = estados[frame]
-        for col, row in enumerate(estado):
-            text = font.render(u'♛', True, BLACK)
+        for coluna, linha in enumerate(estado):
+            text = fonte.render(u'♛', True, BLACK)
             text_rect = text.get_rect(center=(
-                col * TILE_SIZE + TILE_SIZE // 2,
-                row * TILE_SIZE + TILE_SIZE // 2
+                coluna * TAMANHO_QUADRADO + TAMANHO_QUADRADO // 2,
+                linha * TAMANHO_QUADRADO + TAMANHO_QUADRADO // 2
             ))
-            screen.blit(text, text_rect)
+            tela.blit(text, text_rect)
 
-        # Draw counter below the board
-        counter_text = counter_font.render(f"Estado {frame + 1} de {len(estados)}", True, BLACK)
-        screen.blit(counter_text, (10, BOARD_SIZE + 5))  # y = bottom of board + margin
-        attack_text = counter_font.render(f"Ataques: {listaAtaques[frame]}", True, BLACK)
-        screen.blit(attack_text, (500, BOARD_SIZE + 5))
+        counter_text = fonte_contador.render(f"Estado {frame + 1} de {len(estados)}", True, BLACK)
+        tela.blit(counter_text, (10, TAMANHO_TABULEIRO + 5))  # y = bottom of board + margin
+        attack_text = fonte_contador.render(f"Ataques: {listaAtaques[frame]}", True, BLACK)
+        tela.blit(attack_text, (500, TAMANHO_TABULEIRO + 5))
 
         pygame.display.flip()
+        pygame.image.save(tela, "my_file"+str(frame)+".png")
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                rodando = False
 
-        # Event handling
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        # Move to next frame after delay
         pygame.time.delay(1500)
         if frame < len(estados) - 1:
             frame += 1
         else:
-            # Stop at last frame
             pass
 
         clock.tick(60)
 
     pygame.quit()
 
-
-
-
-    
-
 # O estado inicial é um vetor prenchido com os numeros de 1 a 8 de forma aleatoria. O índice do vetor
 # determina a coluna da rainha, e o seu valor determina a linha em que a rainha se encontra. 
 estado = list(range(0, 8))
 random.shuffle(estado)
+estado = [0,0,0,0,0,0,0,0]
 listaEstados = CalcularMelhorEstado(estado)
 listaAtaques = list()
 for x in listaEstados:
@@ -139,5 +119,5 @@ for x in listaEstados:
 
 print("\n\n")
 
-animar_tabuleiro(listaEstados, listaAtaques)
+AnimarTabuleiro(listaEstados, listaAtaques)
 
